@@ -10,6 +10,9 @@
 2. `docker compose --profile single up -d` reaches `healthy` status on `/health`
 3. Stopping `single` and running `docker compose --profile batch up -d` also reaches `healthy`
 4. `.env` carries the WSL2 knobs (`GPU_UTIL=0.93`, `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False` if needed) documented in REQUIREMENTS.md
+**Plans:** 1 plan
+Plans:
+- [ ] 01-01-PLAN.md — Bring up `single` (daily-driver config) then `batch`, prove both healthy + verify-clean, restore `single` as default
 
 ## Phase 2: Explicit Mode Switching
 **Goal:** A single command switches between single-user and batch mode safely and remembers the choice.
