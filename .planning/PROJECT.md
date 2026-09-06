@@ -47,6 +47,7 @@ until a mode is explicitly chosen.
 - **Existing WSL boot pattern:** `/etc/wsl.conf` `[boot] command = "/usr/local/bin/paseo-boot-start"`, managed by chezmoi (`~/.local/share/chezmoi/.chezmoiscripts/run_onchange_after_04-wsl-boot-paseo.sh.tmpl`). That wrapper already starts the Docker service on GPU hosts (`.has_nvidia_gpu`) before starting the Paseo daemon as the login user via `su -l`. The qwen boot hook should extend or follow this same wrapper convention rather than introducing a second, conflicting boot mechanism.
 - **Sibling repo convention:** `agent-selfhosted` (`~/repos/agent-selfhosted`) runs its own model stack via plain `docker-compose.yml`, no systemd — confirms Compose + Docker restart policy is the established local convention for GPU-model serving on this machine, not systemd units.
 - **Docker daemon note:** not running by default in a bare agent-sandbox shell; needs `sudo service docker start` in a real terminal session.
+- **Upstream docs checked (DeepWiki, syv-ai/qwen38-27b-rtx3090):** confirms no existing systemd/boot-autostart guidance is published upstream — this is genuinely new ground for the repo, not a documented-but-unused feature. Also surfaces WSL2 knobs worth setting in `.env` when bringing the stack up: `GPU_UTIL=0.93` (vs. default `0.972`, to account for WSL2 VRAM overhead) and disabling `expandable_segments:True` if CUDA allocation errors appear on this driver.
 
 ## Constraints
 
