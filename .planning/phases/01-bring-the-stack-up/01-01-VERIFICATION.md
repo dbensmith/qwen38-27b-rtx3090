@@ -4,7 +4,7 @@ verified: 2026-09-13T22:55:00Z
 status: passed
 score: 7/7 must-haves verified
 covered_files: [".env.tmpl", ".planning/REQUIREMENTS.md", ".planning/ROADMAP.md", ".planning/phases/01-bring-the-stack-up/01-01-PLAN.md", ".planning/phases/01-bring-the-stack-up/01-01-SUMMARY.md", "docker-compose.yml", "verify.sh"]
-covered_digest: "v1:sha256:8ee49537ca49a6d58b541a0c3bb4662ac7def3f432abc80d1281b98b1a4cdc14"
+covered_digest: "v1:sha256:00dedeab289cf9d7fe860e23e1e5cdecd7ea33661d8f0d76e75ce0972250c829"
 behavior_unverified: 0
 overrides_applied: 0
 ---
