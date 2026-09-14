@@ -7,9 +7,9 @@
 
 ### Deploy
 
-- [ ] **DEPLOY-01**: `prepare` profile downloads and quantizes the model into `./models` (idempotent — safe to re-run)
-- [ ] **DEPLOY-02**: `single` profile starts and passes its Compose healthcheck (`/health`) on this machine, with WSL2-appropriate `.env` knobs (`GPU_UTIL=0.93`; `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False` if "device not ready" appears during weight repacking — note this is the opposite of the general non-WSL2 recommendation)
-- [ ] **DEPLOY-03**: `batch` profile starts and passes its Compose healthcheck on this machine
+- [x] **DEPLOY-01**: `prepare` profile downloads and quantizes the model into `./models` (idempotent — safe to re-run)
+- [x] **DEPLOY-02**: `single` profile starts and passes its Compose healthcheck (`/health`) on this machine, with WSL2-appropriate `.env` knobs (`GPU_UTIL=0.93`; `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False` if "device not ready" appears during weight repacking — note this is the opposite of the general non-WSL2 recommendation)
+- [x] **DEPLOY-03**: `batch` profile starts and passes its Compose healthcheck on this machine
 
 ### Switching
 
@@ -41,9 +41,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEPLOY-01 | Phase 1 | Pending |
-| DEPLOY-02 | Phase 1 | Pending |
-| DEPLOY-03 | Phase 1 | Pending |
+| DEPLOY-01 | Phase 1 | Complete |
+| DEPLOY-02 | Phase 1 | Complete |
+| DEPLOY-03 | Phase 1 | Complete |
 | SWITCH-01 | Phase 2 | Pending |
 | SWITCH-02 | Phase 2 | Pending |
 | SWITCH-03 | Phase 2 | Pending |
@@ -53,6 +53,7 @@
 | BOOT-03 | Phase 3 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 10 total
 - Mapped to phases: 10
 - Unmapped: 0 ✓
