@@ -13,7 +13,7 @@
 3. Stopping `single` and running `docker compose --profile batch up -d` also reaches `healthy`
 4. `.env` carries the WSL2 knobs (`GPU_UTIL=0.93`, `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False` if needed) documented in REQUIREMENTS.md
 
-**Plans:** 1/1 plans executed
+**Plans:** 1/1 plans complete
 Plans:
 
 - [x] 01-01-PLAN.md — Bring up `single` (daily-driver config) then `batch`, prove both healthy + verify-clean, restore `single` as default
