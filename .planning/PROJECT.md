@@ -46,14 +46,14 @@ until a mode is explicitly chosen.
 - **Platform:** WSL2 (no systemd as PID 1 — confirmed `ps -p 1` is `init(WLinux)`), NVIDIA RTX 3090 (24GB), Docker via `service docker start`.
 - **Existing WSL boot pattern:** `/etc/wsl.conf` `[boot] command = "/usr/local/bin/paseo-boot-start"`, managed by chezmoi (`~/.local/share/chezmoi/.chezmoiscripts/run_onchange_after_04-wsl-boot-paseo.sh.tmpl`). That wrapper already starts the Docker service on GPU hosts (`.has_nvidia_gpu`) before starting the Paseo daemon as the login user via `su -l`. The qwen boot hook should extend or follow this same wrapper convention rather than introducing a second, conflicting boot mechanism.
 - **Sibling repo convention:** `agent-selfhosted` (`~/repos/agent-selfhosted`) runs its own model stack via plain `docker-compose.yml`, no systemd — confirms Compose + Docker restart policy is the established local convention for GPU-model serving on this machine, not systemd units.
-- **Docker daemon note:** not running by default in a bare agent-sandbox shell; needs `sudo service docker start` in a real terminal session.
+- **Docker daemon note:** not running by default in a bare agent-sandbox shell. `sudo service docker start` now has passwordless sudo, but can still fail with `ulimit: error setting limit (Invalid argument)` on a fresh WSL2 session — see docs/docker.md WSL2 notes item 6 (a `/etc/security/limits.d/99-docker-nofile.conf` pin, applied once from a real terminal, fixes it).
 - **Upstream docs checked (DeepWiki, syv-ai/qwen38-27b-rtx3090):** confirms no existing systemd/boot-autostart guidance is published upstream — this is genuinely new ground for the repo, not a documented-but-unused feature. Also surfaces WSL2 knobs worth setting in `.env` when bringing the stack up: `GPU_UTIL=0.93` (vs. default `0.972`, to account for WSL2 VRAM overhead) and disabling `expandable_segments:True` if CUDA allocation errors appear on this driver.
 
 ## Constraints
 
 - **Platform:** No systemd as PID 1 on this WSL distro — any boot automation must use the `/etc/wsl.conf [boot]` mechanism, not `systemctl enable`.
 - **Hardware:** Single RTX 3090 (24GB VRAM) — single and batch profiles are mutually exclusive, never run concurrently.
-- **Sandbox:** This agent session cannot start the Docker daemon (no passwordless sudo for `service docker start`) — that step is manual, once, in a real terminal.
+- **Sandbox:** `sudo service docker start` has passwordless sudo now (scoped to `service docker {start,stop,restart,status}`), but a fresh WSL2 session can still fail on a kernel-level `ulimit` rejection — see docs/docker.md WSL2 notes item 6. The PAM-limits fix for that needs unrestricted sudo + a real terminal + session restart, which an agent session cannot do; everything downstream of a fixed session is unblocked.
 
 ## Key Decisions
 

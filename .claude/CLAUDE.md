@@ -23,7 +23,7 @@ until a mode is explicitly chosen.
 
 - **Platform:** No systemd as PID 1 on this WSL distro — any boot automation must use the `/etc/wsl.conf [boot]` mechanism, not `systemctl enable`.
 - **Hardware:** Single RTX 3090 (24GB VRAM) — single and batch profiles are mutually exclusive, never run concurrently.
-- **Sandbox:** This agent session cannot start the Docker daemon (no passwordless sudo for `service docker start`) — that step is manual, once, in a real terminal.
+- **Sandbox:** `sudo service docker start` now has passwordless sudo configured (`/etc/sudoers.d/docker-nopasswd`, scoped to `service docker {start,stop,restart,status}` only). It can still fail on a *fresh* WSL2 session with `ulimit: error setting limit (Invalid argument)` — see docs/docker.md WSL2 notes item 6 for the root cause and fix (a one-time `/etc/security/limits.d/99-docker-nofile.conf` pin that requires a real terminal + session restart; an agent session can apply the sudoers/service fix but not the PAM-limits fix, since that needs unrestricted sudo).
 
 <!-- GSD:project-end -->
 

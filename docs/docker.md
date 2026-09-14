@@ -177,3 +177,26 @@ hard abort rather than a tuning question:
      kernel**, and that ninja build can fail here. `EXTRA_ARGS="--kv-cache-dtype
      auto"` sidesteps it — `EXTRA_ARGS` is last on the command line, so it wins
      over `KV_ARGS`.
+
+6. **`sudo service docker start` can fail before the daemon even tries to bind
+   its socket, on WSL2 distros with no systemd as PID 1.** Symptom:
+   `/etc/init.d/docker: 62: ulimit: error setting limit (Invalid argument)`,
+   then `docker ps` reports the socket doesn't exist. Root cause: the init
+   script hardcodes `ulimit -Hn 524288`, and some WSL2 kernel builds (confirmed
+   on `6.18.33.2-microsoft-standard-WSL2`) reject `setrlimit(RLIMIT_NOFILE)`
+   for *any* value that differs from the shell's current hard limit — even a
+   normally-legal downward change. If the session's default hard nofile
+   (`ulimit -Hn`, no override present) isn't already exactly `524288`, the
+   `ulimit` call inside the init script errors out and the daemon never
+   starts. Fix: pin the session's hard nofile to `524288` so that line becomes
+   a no-op —
+   ```bash
+   echo -e "pengwin\thard\tnofile\t524288" | sudo tee /etc/security/limits.d/99-docker-nofile.conf
+   ```
+   then close and reopen the terminal (PAM limits apply at session/login
+   start only, not mid-session) and confirm `ulimit -Hn` prints `524288`
+   before retrying `sudo service docker start`. Revisit/remove this file if
+   either upstream docker packaging changes or drops that hardcoded
+   `ulimit -Hn` line (`grep -n 'ulimit -Hn' /etc/init.d/docker`), or a future
+   WSL2 kernel stops rejecting the syscall (test: a fresh shell's
+   `ulimit -Hn 100000` should succeed, not error, once fixed).

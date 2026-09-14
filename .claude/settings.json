@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nvidia-smi *)",
+      "Bash(git push *)",
+      "Bash(sudo service docker start)",
+      "Bash(sudo service docker stop)",
+      "Bash(sudo service docker restart)",
+      "Bash(sudo service docker status)",
+      "Bash(docker exec *)"
+    ]
+  }
+}
