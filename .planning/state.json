@@ -2,11 +2,24 @@
   "contract": "1.0.0",
   "flavor": "core",
   "milestone": null,
-  "phases": [],
+  "phases": [
+    {
+      "number": "01",
+      "status": "complete"
+    },
+    {
+      "number": "02",
+      "status": "complete"
+    },
+    {
+      "number": "03",
+      "status": "pending"
+    }
+  ],
   "next": {
     "command": "/gsd:progress --next",
     "label": "Advance to the next step",
-    "reason": "Phase 02 of 3 · 0% · executing"
+    "reason": "Phase 2 of 3 complete"
   },
-  "updated_at": "2026-09-14T12:28:14.248Z"
+  "updated_at": "2026-09-15T02:00:20.813Z"
 }
