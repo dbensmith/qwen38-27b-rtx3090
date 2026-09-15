@@ -9,6 +9,7 @@ venv/
 drafter/data/
 drafter/runs/
 .env
+.current-profile
 # local reproduction artifacts (symlinks here, so no trailing slash)
 venv
 models
