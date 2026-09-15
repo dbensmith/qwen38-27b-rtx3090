@@ -29,10 +29,10 @@ Plans:
 3. `--kv-cache-memory` is pinned to an explicit byte value rather than a percentage, and survives repeated switches without throughput regressions
 4. The chosen profile is persisted to a state file that `switch.sh` reads on the next invocation
 
-**Plans:** 1 plans
+**Plans:** 1/1 plans executed
 Plans:
 
-- [ ] 02-01-PLAN.md — Build `switch.sh` (stop → VRAM gate → KV pin → start → persist), prove explicit switching live in both directions, add no-arg resolution / idempotency / corrupt-state defaults, prove the gate-abort contract, restore `single` healthy
+- [x] 02-01-PLAN.md — Build `switch.sh` (stop → VRAM gate → KV pin → start → persist), prove explicit switching live in both directions, add no-arg resolution / idempotency / corrupt-state defaults, prove the gate-abort contract, restore `single` healthy
 
 ## Phase 3: Boot Autostart
 
