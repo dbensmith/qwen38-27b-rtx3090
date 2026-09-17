@@ -4,7 +4,7 @@ verified: 2026-09-17T11:09:22Z
 status: passed
 score: 9/9 must-haves verified
 covered_files: [".planning/phases/02-explicit-mode-switching/02-01-PLAN.md", ".planning/phases/02-explicit-mode-switching/02-01-SUMMARY.md", ".planning/REQUIREMENTS.md", "switch.sh", ".gitignore", ".planning/phases/02-explicit-mode-switching/02-CONTEXT.md", ".planning/phases/02-explicit-mode-switching/02-UAT.md"]
-covered_digest: "v1:sha256:57ad580df7fc9634aa64d663d2a85c8998fbeae771681f65a303c132605f134b"
+covered_digest: "v1:sha256:45a2c49a35416b404b534f3ae2332f590bb514129fccec15c9cf489af963dacb"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification: true
