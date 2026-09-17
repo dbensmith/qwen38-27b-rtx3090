@@ -106,7 +106,7 @@ if [ -n "$NOARG" ]; then
     SAVED="${SAVED%"${SAVED##*[![:space:]]}"}"   # strip trailing whitespace
     case "$SAVED" in
       single|batch) TARGET=$SAVED; RESOLVED_FROM="no-arg: neither running -> .current-profile" ;;
-      *)            TARGET=single; RESOLVED_FROM="no-arg: neither running, no valid .current-profile -> default single" ;;
+      *)            TARGET=batch; RESOLVED_FROM="no-arg: neither running, no valid .current-profile -> default batch" ;;
     esac
   fi
 else

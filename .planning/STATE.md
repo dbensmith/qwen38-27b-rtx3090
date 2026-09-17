@@ -4,9 +4,9 @@ current_phase: 02
 current_phase_name: Explicit Mode Switching
 status: verifying
 stopped_at: Phase 2 verification pending human UAT (honest correction — prior run forced complete despite stale gate)
-last_updated: "2026-09-15T02:00:21.066Z"
-last_activity: 2026-09-14
-last_activity_desc: Phase 02 execution started
+last_updated: "2026-09-17T07:45:35.393Z"
+last_activity: 2026-09-17
+last_activity_desc: Completed quick task 260917-2fz: make batch mode the default and switch to it now.
 state_head: e9a233f00c44fd12efacf6427e20d5b0e8bf8642
 progress:
   total_phases: 3
@@ -69,3 +69,9 @@ Resume file: /home/pengwin/repos/qwen38-27b-rtx3090/.planning/phases/02-explicit
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 02 P01 | 50min | 3 tasks | 3 files |
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260917-2fz | make batch mode the default and switch to it now. | 2026-09-17 | pending | [260917-2fz-make-batch-mode-the-default-and-switch-t](./quick/260917-2fz-make-batch-mode-the-default-and-switch-t/) |
