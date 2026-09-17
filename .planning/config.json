@@ -19,15 +19,15 @@
     "quick_branch_template": null
   },
   "workflow": {
-    "research": false,
-    "plan_check": false,
-    "verifier": false,
+    "research": true,
+    "plan_check": true,
+    "verifier": true,
     "nyquist_validation": false,
-    "auto_advance": false,
+    "auto_advance": true,
     "node_repair": true,
     "node_repair_budget": 2,
-    "ui_phase": true,
-    "ui_safety_gate": true,
+    "ui_phase": false,
+    "ui_safety_gate": false,
     "ai_integration_phase": true,
     "api_coverage_gate": true,
     "human_verify_mode": "end-of-phase",
@@ -48,8 +48,8 @@
     "security_enforcement": true,
     "security_asvs_level": 1,
     "security_block_on": "high",
-    "tdd_mode": true,
-    "ui_review": true,
+    "tdd_mode": false,
+    "ui_review": false,
     "_auto_chain_active": false
   },
   "ship": {
@@ -74,10 +74,10 @@
     "source_grounding_authority": "grep"
   },
   "graphify": {
-    "enabled": true
+    "enabled": false
   },
   "intel": {
-    "enabled": true
+    "enabled": false
   },
   "model_overrides": {},
   "model_profile_overrides": {
