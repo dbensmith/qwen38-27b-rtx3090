@@ -9,7 +9,7 @@
 #   ./switch.sh batch     # switch to batch (throughput) mode
 #   ./switch.sh           # no argument: switch to the non-running profile;
 #                         # with neither running, fall back to the persisted
-#                         # .current-profile token; absent/blank/corrupt -> single
+#                         # .current-profile token; absent/blank/corrupt -> batch
 #                         # (requesting the already-running profile is a no-op)
 #
 # Exit code: 0 switched (or no-op), 1 operational failure (VRAM-release gate

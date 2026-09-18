@@ -36,13 +36,13 @@ Plans:
 
 ## Phase 3: Boot Autostart
 
-**Goal:** Whichever profile was last selected comes back up automatically after a WSL2 reboot, defaulting to `single` if nothing was ever chosen.
+**Goal:** Whichever profile was last selected comes back up automatically after a WSL2 reboot, defaulting to `batch` if nothing was ever chosen.
 **Requirements:** BOOT-01, BOOT-02, BOOT-03
 **Success Criteria**:
 
 1. A boot hook is installed that follows the existing `/etc/wsl.conf [boot]` chezmoi wrapper convention (extends or sits alongside `paseo-boot-start`, no systemd)
 2. After `wsl --shutdown` + reopen, the persisted profile's container comes up without manual intervention
-3. On a machine with no persisted state yet, the boot hook starts `single`
+3. On a machine with no persisted state yet, the boot hook starts `batch`
 4. Re-running the boot-hook installer is a no-op if already installed (idempotent, matching the paseo wrapper's own idempotency check)
 
 **Plans:** 2 plans

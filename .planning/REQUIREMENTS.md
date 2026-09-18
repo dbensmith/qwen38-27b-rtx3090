@@ -1,7 +1,7 @@
 # Requirements: Qwen3.8-27B Deployment (Single-3090)
 
 **Defined:** 2026-09-06
-**Core Value:** The 3090 always comes back serving requests after a reboot, in whichever mode (single-user or batch) was last selected — with single-user as the safe default until a mode is explicitly chosen.
+**Core Value:** The 3090 always comes back serving requests after a reboot, in whichever mode (single-user or batch) was last selected — with batch as the safe default until a mode is explicitly chosen.
 
 ## v1 Requirements
 
@@ -21,7 +21,7 @@
 ### Boot Autostart
 
 - [ ] **BOOT-01**: A WSL boot hook (following the existing `/etc/wsl.conf [boot]` chezmoi wrapper convention, not systemd) starts the last-persisted profile after `wsl --shutdown` + restart
-- [ ] **BOOT-02**: If no profile was ever selected, the boot hook starts `single` by default
+- [ ] **BOOT-02**: If no profile was ever selected, the boot hook starts `batch` by default
 - [ ] **BOOT-03**: Boot hook installation is idempotent (safe to re-run, matches the existing paseo-boot-start wrapper pattern)
 
 ## v2 Requirements

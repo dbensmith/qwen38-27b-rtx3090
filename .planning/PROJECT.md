@@ -16,7 +16,7 @@ systemd units (this WSL distro has no systemd as PID 1).
 ## Core Value
 
 The 3090 always comes back serving requests after a reboot, in whichever mode
-(single-user or batch) was last selected — with single-user as the safe default
+(single-user or batch) was last selected — with batch as the safe default
 until a mode is explicitly chosen.
 
 ## Requirements
@@ -32,7 +32,7 @@ until a mode is explicitly chosen.
 
 - [ ] Model is downloaded/quantized and `single` profile runs and passes health check on this machine
 - [ ] A switch command (e.g. `./switch.sh single|batch`) stops the other profile, starts the chosen one, and persists the choice
-- [ ] WSL boot hook starts whichever profile was last persisted, defaulting to `single` on first run
+- [ ] WSL boot hook starts whichever profile was last persisted, defaulting to `batch` on first run
 - [ ] Boot hook follows the existing chezmoi `/etc/wsl.conf [boot]` wrapper pattern (no systemd dependency)
 
 ### Out of Scope
@@ -61,7 +61,7 @@ until a mode is explicitly chosen.
 |----------|-----------|---------|
 | Deploy via Docker Compose profiles, not bare-metal venv + systemd units | This WSL distro has no systemd; Compose + `restart: unless-stopped` + Docker's existing boot-start already covers most of the auto-restart behavior | ✓ Good |
 | Explicit `switch.sh single\|batch` script, not "whatever was running wins" | User wants deliberate mode selection with a persisted choice, not implicit state inferred from container status | — Pending |
-| Default profile is `single` on first run | Matches "single user fast mode as default" | — Pending |
+| Default profile is `batch` on first run | Quick task 260917-2fz (2026-09-17) made batch the current default; boot follows the same fallback (switch.sh:109) | ✓ Good |
 | Boot autostart follows the existing chezmoi `/etc/wsl.conf [boot]` wrapper pattern | Consistency with the Paseo daemon boot hook already on this machine; avoids introducing systemd as a second, unsupported autostart mechanism | — Pending |
 
 ## Evolution
