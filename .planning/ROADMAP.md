@@ -29,7 +29,7 @@ Plans:
 3. `--kv-cache-memory` is pinned to an explicit byte value rather than a percentage, and survives repeated switches without throughput regressions
 4. The chosen profile is persisted to a state file that `switch.sh` reads on the next invocation
 
-**Plans:** 1/1 plans executed
+**Plans:** 1/1 plans complete
 Plans:
 
 - [x] 02-01-PLAN.md — Build `switch.sh` (stop → VRAM gate → KV pin → start → persist), prove explicit switching live in both directions, add no-arg resolution / idempotency / corrupt-state defaults, prove the gate-abort contract, restore `single` healthy
@@ -44,6 +44,12 @@ Plans:
 2. After `wsl --shutdown` + reopen, the persisted profile's container comes up without manual intervention
 3. On a machine with no persisted state yet, the boot hook starts `single`
 4. Re-running the boot-hook installer is a no-op if already installed (idempotent, matching the paseo wrapper's own idempotency check)
+
+**Plans:** 2 plans
+Plans:
+
+- [ ] 03-01-PLAN.md — Create the 045 boot-LLM chezmoi template (local-llm-start wrapper + self-healing combined `[boot]` line), commit in the dotfiles repo, verify with a real `wsl --shutdown` + reopen (human checkpoint)
+- [ ] 03-02-PLAN.md — Align the planning docs (REQUIREMENTS/ROADMAP/PROJECT/switch.sh header) with the locked `batch` default (D-08/D-10) and commit the pending Phase 2 bookkeeping
 
 ---
 *Roadmap created: 2026-09-06*
