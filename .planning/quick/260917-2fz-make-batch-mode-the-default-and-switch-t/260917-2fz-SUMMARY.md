@@ -27,4 +27,4 @@ Make batch mode the default profile and switch to it now.
 - ✅ When neither profile running and no `.current-profile`, `./switch.sh` defaults to `batch`
 
 ## Commit
-Code changes committed atomically. Quick task artifacts will be committed in final step.
+Commit: 960cca5

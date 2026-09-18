@@ -13,10 +13,10 @@
 
 ### Switching
 
-- [ ] **SWITCH-01**: A `switch.sh single|batch` script stops whichever profile is currently running and starts the requested one
-- [ ] **SWITCH-02**: The switch script persists the chosen profile to a state file so it survives a reboot
-- [ ] **SWITCH-03**: Running `switch.sh` with no persisted state yet defaults to `single`
-- [ ] **SWITCH-04**: `switch.sh` waits for the outgoing profile's VRAM to fully release (matching the existing `qwen-serving.service` `ExecStartPre` GPU-free check pattern) before starting the new one, and pins `--kv-cache-memory` to an explicit byte value rather than a `gpu-memory-utilization` fraction, so restart-to-restart KV pool sizing is stable
+- [x] **SWITCH-01**: A `switch.sh single|batch` script stops whichever profile is currently running and starts the requested one
+- [x] **SWITCH-02**: The switch script persists the chosen profile to a state file so it survives a reboot
+- [x] **SWITCH-03**: Running `switch.sh` with no persisted state yet defaults to `single`
+- [x] **SWITCH-04**: `switch.sh` waits for the outgoing profile's VRAM to fully release (matching the existing `qwen-serving.service` `ExecStartPre` GPU-free check pattern) before starting the new one, and pins `--kv-cache-memory` to an explicit byte value rather than a `gpu-memory-utilization` fraction, so restart-to-restart KV pool sizing is stable
 
 ### Boot Autostart
 
@@ -44,10 +44,10 @@
 | DEPLOY-01 | Phase 1 | Complete |
 | DEPLOY-02 | Phase 1 | Complete |
 | DEPLOY-03 | Phase 1 | Complete |
-| SWITCH-01 | Phase 2 | Pending |
-| SWITCH-02 | Phase 2 | Pending |
-| SWITCH-03 | Phase 2 | Pending |
-| SWITCH-04 | Phase 2 | Pending |
+| SWITCH-01 | Phase 2 | Complete |
+| SWITCH-02 | Phase 2 | Complete |
+| SWITCH-03 | Phase 2 | Complete |
+| SWITCH-04 | Phase 2 | Complete |
 | BOOT-01 | Phase 3 | Pending |
 | BOOT-02 | Phase 3 | Pending |
 | BOOT-03 | Phase 3 | Pending |

@@ -2,24 +2,11 @@
   "contract": "1.0.0",
   "flavor": "core",
   "milestone": null,
-  "phases": [
-    {
-      "number": "01",
-      "status": "complete"
-    },
-    {
-      "number": "02",
-      "status": "verifying"
-    },
-    {
-      "number": "03",
-      "status": "pending"
-    }
-  ],
+  "phases": [],
   "next": {
-    "command": "/gsd-verify-work 02",
-    "label": "Run human verification for phase 02",
-    "reason": "Phase 02 verification human_needed - UAT 1/14 pending"
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 03 of 3 · 33% · executing"
   },
-  "updated_at": "2026-09-15T02:00:20.813Z"
+  "updated_at": "2026-09-18T07:51:59.367Z"
 }
