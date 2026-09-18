@@ -174,7 +174,7 @@ Key property: the `[boot]` child is fire-and-forget from init's perspective (ini
 command = "/usr/local/bin/paseo-boot-start" ; /usr/local/bin/local-llm-start"
 ```
 **Invariant (load-bearing):** the line MUST begin with the exact substring
-`command = "/usr/local/bin/paseo-boot-start"` — that is the existing paseo template's idempotency anchor (`grep -qF "$BOOT_LINE"` at template line 60, with `BOOT_LINE='command = "/usr/local/bin/paseo-boot-start"'` at line 6 `[VERIFIED: run_onchange_after_04-wsl-boot-paseo.sh.tmpl:6,60]`). As long as the combined line keeps that prefix, the paseo template sees "already set — no change" and never runs its whole-line-replacement `sed` (line 66: `sudo sed -i "s|^command\s*=.*|${BOOT_LINE}|" /etc/wsl.conf`), which would otherwise *delete* the LLM half of the chain.
+`command = "/usr/local/bin/paseo-boot-start"` — that is the existing paseo template's idempotency anchor (`grep -qF "$BOOT_LINE"` at template line 60, with `BOOT_LINE="command = \"${WRAPPER}\""` at line 6 — a double-quoted variable form that expands at runtime to `command = "/usr/local/bin/paseo-boot-start"` (`WRAPPER` set at line 5) `[VERIFIED: run_onchange_after_04-wsl-boot-paseo.sh.tmpl:6,60]`). As long as the combined line keeps that prefix, the paseo template sees "already set — no change" and never runs its whole-line-replacement `sed` (line 66: `sudo sed -i "s|^command\s*=.*|${BOOT_LINE}|" /etc/wsl.conf`), which would otherwise *delete* the LLM half of the chain.
 
 **Self-healing in both apply orders (045 template logic):**
 1. `[boot]` line contains the LLM marker (`/usr/local/bin/local-llm-start`) → no-op (`already set — no change`).
