@@ -1,8 +1,9 @@
 ---
 phase: 03-boot-autostart
 verified: 2026-09-18T10:10:25Z
-status: human_needed
-score: 6/8
+re-verified: 2026-09-18T11:10:00Z
+status: passed
+score: 8/8
 covered_files:
   - ".planning/PROJECT.md"
   - ".planning/REQUIREMENTS.md"
@@ -13,24 +14,18 @@ covered_files:
   - ".planning/phases/03-boot-autostart/03-02-SUMMARY.md"
   - "switch.sh"
 covered_digest: "v1:sha256:bb32b99ad233878287b1e7ddc33eec6a37128e8654245689cb0d1345609346f7"
-behavior_unverified: 2
+behavior_unverified: 0
 overrides_applied: 0
-behavior_unverified_items:
-  - truth: "No persisted state -> the boot hook starts batch (ROADMAP SC3 / BOOT-02)"
-    test: "In WSL: mv .current-profile .current-profile.bak ; then from Windows: wsl --shutdown ; reopen WSL; wait for the boot chain; check tail /var/log/local-llm-boot.log and docker compose ps; then restore the file"
-    expected: "A fresh log line 'OK: profile=batch (from .current-profile=<absent>; ...)' and the batch container Up. CAUTION (review IN-02): the default-applied= field will misreport 'no' in exactly this case (inverted test) — judge from the from .current-profile=<absent> field and the started batch profile, not from default-applied=yes"
-    why_human: "Requires mutating runtime state (removing .current-profile) and a real wsl --shutdown reboot (Windows interop, outside the sandbox). The only recorded boot (2026-09-18) had .current-profile=batch, so the default branch has never been exercised at runtime"
-  - truth: "The wrapper's up -d branch starts the persisted profile when the container is not already up (03-01 must-have T3 start branch)"
-    test: "In WSL: docker compose --profile batch down (stop the batch service); then from Windows: wsl --shutdown ; reopen WSL; wait; check tail /var/log/local-llm-boot.log and docker compose ps"
-    expected: "A fresh log line 'OK: profile=batch ...; already-running-before-up=no' and the batch container Up (health may read 'starting' for up to ~15 min — the 900s compose start period is not a fault)"
-    why_human: "Requires creating a down-container state (mutation) and a real wsl --shutdown reboot. The only recorded boot hit the already-running branch — the docker daemon's restart: unless-stopped policy brought the container up before the wrapper's up -d ran — so the actual start transition has never been exercised"
+behavior_unverified_items: []
 human_verification:
   - test: "Prove the boot hook's own start path: docker compose --profile batch down, then wsl --shutdown + reopen WSL"
     expected: "Fresh /var/log/local-llm-boot.log line with already-running-before-up=no; docker compose ps shows batch-1 Up (health may be 'starting' for up to ~15 min)"
     why_human: "Requires a stopped-container state and a real VM reboot (wsl --shutdown is Windows interop the sandbox cannot perform)"
+    result: pass
   - test: "Prove the no-persisted-state default: move .current-profile aside, then wsl --shutdown + reopen WSL, then restore it"
     expected: "Fresh log line 'from .current-profile=<absent>' with profile=batch and the batch container Up (note: default-applied= misreports 'no' here — review IN-02 — so judge on the <absent> field and the batch profile)"
     why_human: "Requires mutating the runtime state file and a real VM reboot"
+    result: pass
 ---
 
 # Phase 3: Boot Autostart Verification Report
@@ -38,8 +33,8 @@ human_verification:
 **Phase Goal:** Whichever profile was last selected comes back up automatically after a WSL2 reboot, defaulting to `batch` if nothing was ever chosen. (ROADMAP.md Phase 3; success criteria: (1) boot hook follows /etc/wsl.conf [boot] chezmoi wrapper convention, no systemd; (2) after wsl --shutdown + reopen the persisted profile's container comes up unaided; (3) no persisted state -> hook starts batch; (4) re-running installer is a no-op.)
 
 **Verified:** 2026-09-18T10:10:25Z
-**Status:** human_needed
-**Re-verification:** No — initial verification
+**Status:** passed
+**Re-verification:** Yes — 2026-09-18T11:10:00Z (UAT 2/2 passed, recorded in 03-UAT.md; both runtime branches exercised in a single combined reboot)
 
 ## Goal Achievement
 
@@ -50,13 +45,13 @@ human_verification:
 | 1 | A boot hook is installed following the `/etc/wsl.conf [boot]` chezmoi wrapper convention (sits alongside `paseo-boot-start`, no systemd) — SC1 | ✓ VERIFIED | `/etc/wsl.conf:17` carries the combined `[boot]` line; `/usr/local/bin/local-llm-start` installed (mode 755, `bash -n` clean, 2984 B); source of truth is the committed dotfiles template `.chezmoiscripts/run_onchange_after_045-wsl-boot-llm.sh.tmpl` (commit `fba1a8a`) — same `run_onchange`/`su -l`/no-systemd pattern as the 04 paseo template; zero systemd references anywhere in the chain |
 | 2 | The combined `[boot]` line is byte-exact: paseo prefix first, single `;`, no trailing quote, no pipe (03-01 T2) | ✓ VERIFIED | `od -c` of /etc/wsl.conf tail: `...oot-start" ; /usr/local/bin/local-llm-start\n` — no trailing quote, one `;`; `grep -c '\|' /etc/wsl.conf` = 0 (no pipe in the whole file). 04 template's `grep -qF` anchor (`command = "/usr/local/bin/paseo-boot-start"`) is a substring of the line, so both templates converge to no-op (convergence independently re-checked by 03-REVIEW.md) |
 | 3 | After `wsl --shutdown` + reopen, the persisted profile's container comes up unaided — SC2 | ✓ VERIFIED | Live 2026-09-18: VM start 03:26:34 -0600 (`uptime -s`); boot log line `[2026-09-18T09:26:43Z] OK: profile=batch (from .current-profile=batch; default-applied=no); already-running-before-up=yes` = 9 s after VM start, 3 min after the wrapper's 03:23:45 install; `docker compose ps` shows `qwen38-27b-rtx3090-batch-1` `Up 33 minutes (healthy)` on 0.0.0.0:18020. **Caveat (see truth 8):** the container's actual start came from the docker daemon's `restart: unless-stopped` policy (paseo-boot-start starts dockerd first in the same `[boot]` chain); the wrapper's own `up -d` was a confirming no-op. The plan's Task-2 contract explicitly accepts this variant as the desired state being achieved |
-| 4 | No persisted state -> the hook starts `batch` — SC3 / BOOT-02 | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | The installed wrapper carries the verbatim tolerant read (missing/blank/whitespace/corrupt all resolve to `PROFILE=batch`; whitelist `single|batch` before any interpolation — mirror of `switch.sh:96-114`), present and wired. But the only recorded boot had `.current-profile=batch` (`default-applied=no`), so the no-state -> batch branch has never been exercised at runtime and no test covers it — see Human Verification #2 |
+| 4 | No persisted state -> the hook starts `batch` — SC3 / BOOT-02 | ✓ VERIFIED (re-verified 2026-09-18) | Single combined reboot (human `down` + `.current-profile` moved aside before `wsl --shutdown`): fresh line `[2026-09-18T10:59:19Z] OK: profile=batch (from .current-profile=<absent>; default-applied=no); already-running-before-up=no` — the no-state branch exercised at runtime, `batch` started. IN-02 caution applied: judged on the `<absent>` field, not `default-applied` (which reads `no` here by the known inverted flag). `.current-profile` restored to `batch` afterwards, no `.bak` leftover |
 | 5 | Re-running the boot-hook installer (`chezmoi apply`) is a no-op — SC4 / BOOT-03 | ✓ VERIFIED | Observed re-apply (2026-09-18): `run_onchange` hash-skip left the 045 script un-re-executed; orchestrator-side `chezmoi apply --dry-run --verbose --force` emitted zero pending actions (045 not re-run); wrapper mtime still the 03:23:45 install time (frozen through the re-apply); the `[boot]` line remained byte-exact with no duplicated marker. The inner `grep -qF` gate adds defense-in-depth for forced re-runs. (Plan's literal "must print the no-change path" expectation was corrected against `run_onchange` skip semantics — 03-01 Deviation 2; substance verified twice over) |
 | 6 | Commit hygiene: the dotfiles commit adds only the 045 template + the 04 ps1 comment and is never pushed; the qwen-repo commits never stage `.current-profile` / `.gsd/` / `state.json` (03-01 T5, 03-02 T12) | ✓ VERIFIED | dotfiles `git show --name-only --format='' fba1a8a` lists exactly the two templates; `git log @{u}..HEAD` = 1 (still unpushed — the plan's prohibition holds, and the reboot that would unlock a push has since happened, so a push is now *permitted* but is the user's call, not a phase requirement). qwen `85fbb99` = exactly 3 files (REQUIREMENTS, state.json, quick SUMMARY); `d746902` = exactly 4 files (PROJECT, REQUIREMENTS, ROADMAP, switch.sh); `.gsd/` and `.current-profile` untracked, in neither commit; `switch.sh` diff in `d746902` is the single header-comment line (code untouched) |
 | 7 | 03-02 doc alignment: all eight D-10 locations state the `batch` default; do-not-touch items byte-identical (03-02 T6–T11) | ✓ VERIFIED | REQUIREMENTS: BOOT-02 "starts `batch` by default" + Core Value "with batch as the safe default"; ROADMAP: goal "defaulting to `batch` if nothing was ever chosen" + criterion 3 "the boot hook starts `batch`"; PROJECT: Key Decisions row "Default profile is `batch` on first run … ✓ Good" + Core Value + active-requirement line; switch.sh header line 12 "absent/blank/corrupt -> batch" matching line-109 code `*) TARGET=batch`. Do-not-touch items intact: SWITCH-03 line 18 still "defaults to `single`" (completed historical requirement, stale-by-design per 03-02), switch.sh inline comment 97-100 still says `single`, the GSD mirrors (`STATE.md:25`, `.claude/CLAUDE.md`) untouched by `d746902` (absent from its file list) and still carry the stale sentence by design — they resync from PROJECT.md at the next GSD state update |
-| 8 | The wrapper's `up -d` branch starts the profile when the container is not already up (03-01 T3 start branch) | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Code present and wired: `ALREADY=$(docker compose ps -q "$PROFILE")` forensics check, then `su -l "pengwin" -c '… docker compose --profile "$PROFILE" up -d'` (username expanded, mise-activate prelude byte-identical to the 04 wrapper, fire-and-forget, no `/health` wait, no VRAM gate — both prohibitions hold by inspection). But the only recorded boot hit the *other* branch (`already-running-before-up=yes`): the daemon's restart policy beat the wrapper, so the actual start transition has never been exercised — see Human Verification #1 |
+| 8 | The wrapper's `up -d` branch starts the profile when the container is not already up (03-01 T3 start branch) | ✓ VERIFIED (re-verified 2026-09-18) | Same combined reboot: `already-running-before-up=no` with `batch-1` CREATED fresh (~14 min before the check) — the wrapper's own `up -d` performed the actual start transition after the human's `down` (not the daemon restart policy). Container Up healthy on :18020 |
 
-**Score:** 6/8 truths verified (2 present + wired, behavior not yet exercised — see behavior_unverified_items)
+**Score:** 8/8 truths verified (re-verified 2026-09-18 — both runtime branches exercised, see Human Verification below)
 
 ### Deferred Items
 
@@ -149,7 +144,7 @@ Non-blocking findings from `03-REVIEW.md` (mode: advisory, "no blockers") plus t
 
 ### Human Verification Required
 
-Two runtime branches were never exercised (the only recorded boot hit the already-running case with `.current-profile=batch` present). Both are human-only: they require state mutations and a real `wsl --shutdown` (Windows interop outside this sandbox).
+Both items **passed** 2026-09-18 via a single combined reboot (human `down` + state file moved aside before `wsl --shutdown`; results in 03-UAT.md 2/2). Original test definitions retained below for the record.
 
 ### 1. Prove the boot hook's own start path (wrapper `up -d` branch)
 
@@ -165,7 +160,7 @@ Two runtime branches were never exercised (the only recorded boot hit the alread
 
 ### Gaps Summary
 
-**No gaps.** All four ROADMAP success criteria are met to the extent this sandbox can verify: the hook is installed per the chezmoi `[boot]` convention (SC1), the persisted profile demonstrably came back up unaided after a real reboot (SC2, via the accepted already-running variant), the installer is a proven no-op on re-run (SC4), and commit hygiene/wording alignment hold. The two open items are not gaps but unexercised runtime branches of implemented, wired code (SC3's no-state branch and the wrapper's actual `up -d` start branch) — both are cheap for the user to prove on the live machine (items 1 and 2 above), and doing so also gives real evidence against review findings IN-02 and WR-02's worst case.
+**No gaps.** All four ROADMAP success criteria verified live, including both runtime branches (combined 2026-09-18 reboot; UAT 2/2 passed).
 
 ---
 

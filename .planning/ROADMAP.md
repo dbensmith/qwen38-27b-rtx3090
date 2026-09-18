@@ -45,7 +45,7 @@ Plans:
 3. On a machine with no persisted state yet, the boot hook starts `batch`
 4. Re-running the boot-hook installer is a no-op if already installed (idempotent, matching the paseo wrapper's own idempotency check)
 
-**Plans:** 2/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 
 - [x] 03-01-PLAN.md — Create the 045 boot-LLM chezmoi template (local-llm-start wrapper + self-healing combined `[boot]` line), commit in the dotfiles repo, verify with a real `wsl --shutdown` + reopen (human checkpoint)
