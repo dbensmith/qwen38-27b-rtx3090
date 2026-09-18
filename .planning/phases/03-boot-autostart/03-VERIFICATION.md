@@ -1,7 +1,7 @@
 ---
 phase: 03-boot-autostart
 verified: 2026-09-18T10:10:25Z
-re-verified: 2026-09-18T11:10:00Z
+re-verified: 2026-09-18T22:56:05Z
 status: passed
 score: 8/8
 covered_files:
@@ -13,7 +13,7 @@ covered_files:
   - ".planning/phases/03-boot-autostart/03-02-PLAN.md"
   - ".planning/phases/03-boot-autostart/03-02-SUMMARY.md"
   - "switch.sh"
-covered_digest: "v1:sha256:bb32b99ad233878287b1e7ddc33eec6a37128e8654245689cb0d1345609346f7"
+covered_digest: "v1:sha256:e67f6381363bbb030f7028bf23fa1d8b3d2abba0f1c1c1a9befee4e45c720b17"
 behavior_unverified: 0
 overrides_applied: 0
 behavior_unverified_items: []
@@ -161,6 +161,8 @@ Both items **passed** 2026-09-18 via a single combined reboot (human `down` + st
 ### Gaps Summary
 
 **No gaps.** All four ROADMAP success criteria verified live, including both runtime branches (combined 2026-09-18 reboot; UAT 2/2 passed).
+
+_Digest refresh 2026-09-18T22:56:05Z:_ truths unchanged (8/8); `covered_digest` recomputed after the phase-completion bookkeeping commit `323efcf` (BOOT-01..03 checkboxes → [x], plans → complete) plus UAT-complete `2435f2f`. Verifier subagent unreachable (gateway); orchestrator applied the mechanical fingerprint refresh inline.
 
 ---
 
