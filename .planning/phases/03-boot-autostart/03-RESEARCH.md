@@ -494,22 +494,25 @@ Convergence proof (both apply orders, either repo state):
 
 **If this table is empty:** N/A — four assumptions logged above.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **D-10 scope beyond the three named targets.**
    - What we know: D-10 names exactly BOOT-02, ROADMAP criterion 3, and the PROJECT.md Key Decisions row; "exact doc-wording edits" is agent discretion.
    - What's unclear: whether the user also wants the stale claim fixed at `REQUIREMENTS.md:4` (Core Value), `switch.sh:12` (header comment), and the auto-mirrors (`STATE.md:25`, `.claude/CLAUDE.md`).
    - Recommendation: include `REQUIREMENTS.md:4` and `switch.sh:12` (same stale claim, zero risk); leave `STATE.md`/`.claude` to GSD's automatic re-sync and note it in the plan so nobody "fixes" them by hand.
+   - **RESOLVED** (planning, 2026-09-17): 03-02 applies the three named targets plus `REQUIREMENTS.md:4` and `switch.sh:12`, and — as corrected by the plan checker's WARNING-1 — also PROJECT.md's own Core Value (lines 18-20) and active-requirement line (line 35), because those are the *source* text the GSD mirrors (`STATE.md:25`, `.claude/CLAUDE.md`) resync from; the mirrors themselves stay byte-identical and re-sync automatically.
 
 2. **Dotfiles-repo commit hygiene.**
    - What we know: the repo has unrelated uncommitted local edits plus the new template to add; lefthook gates the commit.
    - What's unclear: whether the user wants a commit at all in that repo now, or to hold the template file for their own review/commit.
    - Recommendation: `checkpoint:human-verify` before the dotfiles-repo commit (per the SUS-package rule's spirit: any cross-repo write the agent can't fully validate on its own); stage only the template.
+   - **RESOLVED** (planning, 2026-09-17): 03-01 Task 1 commits the 045 template (+ optional ps1 comment) in the dotfiles repo as part of the tracer, staging only those files and never the unrelated local edits; no push in this plan. The commit itself is gated by the dotfiles repo's own lefthook pre-commit (mise format/lint/benchmark + conventional commit-msg), so no separate human checkpoint is inserted for it; the human checkpoint (Task 2) covers the first real `chezmoi apply`, the D-11 re-apply, and the `wsl --shutdown` reboot.
 
 3. **Windows-side comment update.**
    - What we know: `run_onchange_after_04-start-wsl2-on-boot.ps1.tmpl:13-15` says the `[boot]` command "starts the Paseo daemon" — still true, but incomplete after this phase.
    - What's unclear: whether to touch a Windows-only template at all (the agent can't render/test it here — no pwsh in WSL `[VERIFIED: command -v pwsh]`; a `chezmoi apply --dry-run` on the Linux side won't exercise the .ps1).
    - Recommendation: optional one-line comment update in the *same* 045 task if the user wants it; otherwise leave it (the comment remains factually correct).
+   - **RESOLVED** (planning, 2026-09-17): 03-01 Task 1 includes the optional one-line comment update in the same commit — comment-only, so zero risk even though the .ps1 can't be rendered/tested here; it now notes that both the paseo and local-llm wrappers run at `[boot]`.
 
 ## Environment Availability
 
