@@ -45,11 +45,11 @@ Plans:
 3. On a machine with no persisted state yet, the boot hook starts `batch`
 4. Re-running the boot-hook installer is a no-op if already installed (idempotent, matching the paseo wrapper's own idempotency check)
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
 
-- [ ] 03-01-PLAN.md — Create the 045 boot-LLM chezmoi template (local-llm-start wrapper + self-healing combined `[boot]` line), commit in the dotfiles repo, verify with a real `wsl --shutdown` + reopen (human checkpoint)
-- [ ] 03-02-PLAN.md — Align the planning docs (REQUIREMENTS/ROADMAP/PROJECT/switch.sh header) with the locked `batch` default (D-08/D-10) and commit the pending Phase 2 bookkeeping
+- [x] 03-01-PLAN.md — Create the 045 boot-LLM chezmoi template (local-llm-start wrapper + self-healing combined `[boot]` line), commit in the dotfiles repo, verify with a real `wsl --shutdown` + reopen (human checkpoint)
+- [x] 03-02-PLAN.md — Align the planning docs (REQUIREMENTS/ROADMAP/PROJECT/switch.sh header) with the locked `batch` default (D-08/D-10) and commit the pending Phase 2 bookkeeping
 
 ---
 *Roadmap created: 2026-09-06*

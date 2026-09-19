@@ -20,9 +20,9 @@
 
 ### Boot Autostart
 
-- [ ] **BOOT-01**: A WSL boot hook (following the existing `/etc/wsl.conf [boot]` chezmoi wrapper convention, not systemd) starts the last-persisted profile after `wsl --shutdown` + restart
-- [ ] **BOOT-02**: If no profile was ever selected, the boot hook starts `batch` by default
-- [ ] **BOOT-03**: Boot hook installation is idempotent (safe to re-run, matches the existing paseo-boot-start wrapper pattern)
+- [x] **BOOT-01**: A WSL boot hook (following the existing `/etc/wsl.conf [boot]` chezmoi wrapper convention, not systemd) starts the last-persisted profile after `wsl --shutdown` + restart
+- [x] **BOOT-02**: If no profile was ever selected, the boot hook starts `batch` by default
+- [x] **BOOT-03**: Boot hook installation is idempotent (safe to re-run, matches the existing paseo-boot-start wrapper pattern)
 
 ## v2 Requirements
 
@@ -48,9 +48,9 @@
 | SWITCH-02 | Phase 2 | Complete |
 | SWITCH-03 | Phase 2 | Complete |
 | SWITCH-04 | Phase 2 | Complete |
-| BOOT-01 | Phase 3 | Pending |
-| BOOT-02 | Phase 3 | Pending |
-| BOOT-03 | Phase 3 | Pending |
+| BOOT-01 | Phase 3 | Complete |
+| BOOT-02 | Phase 3 | Complete |
+| BOOT-03 | Phase 3 | Complete |
 
 **Coverage:**
 
