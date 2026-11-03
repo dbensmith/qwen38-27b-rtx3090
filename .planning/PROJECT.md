@@ -63,6 +63,7 @@ until a mode is explicitly chosen.
 | Explicit `switch.sh single\|batch` script, not "whatever was running wins" | User wants deliberate mode selection with a persisted choice, not implicit state inferred from container status | — Pending |
 | Default profile is `batch` on first run | Quick task 260917-2fz (2026-09-17) made batch the current default; boot follows the same fallback (switch.sh:109) | ✓ Good |
 | Boot autostart follows the existing chezmoi `/etc/wsl.conf [boot]` wrapper pattern | Consistency with the Paseo daemon boot hook already on this machine; avoids introducing systemd as a second, unsupported autostart mechanism | — Pending |
+| Qwen3.8-Flash-Next, if adopted, runs natively on Windows (Unsloth Desktop), not WSL | 64 GB host RAM and direct NVMe access avoid WSL's 56 GB cap and the VHDX/9p storage path for a 75+ GB disk-streamed MoE; Unsloth Desktop also enables MTP automatically. WSL remains the automation path for the 27B Docker stack. | ✓ Decided 2026-11-03 — not executed |
 
 ## Evolution
 
@@ -82,4 +83,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-05 after initialization*
+*Last updated: 2026-11-03 — Flash-Next host decision recorded*
