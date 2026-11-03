@@ -53,7 +53,7 @@ until a mode is explicitly chosen.
 
 - **Platform:** No systemd as PID 1 on this WSL distro — any boot automation must use the `/etc/wsl.conf [boot]` mechanism, not `systemctl enable`.
 - **Hardware:** Single RTX 3090 (24GB VRAM) — single and batch profiles are mutually exclusive, never run concurrently.
-- **Sandbox:** `sudo service docker start` has passwordless sudo now (scoped to `service docker {start,stop,restart,status}`), but a fresh WSL2 session can still fail on a kernel-level `ulimit` rejection — see docs/docker.md WSL2 notes item 6. The PAM-limits fix for that needs unrestricted sudo + a real terminal + session restart, which an agent session cannot do; everything downstream of a fixed session is unblocked.
+- **Sandbox:** `sudo service docker start` has passwordless sudo now (scoped to `service docker {start,stop,restart,status}`), but a fresh WSL2 session can still fail on a kernel-level `ulimit` rejection — see docs/docker.md WSL2 notes item 7. The PAM-limits fix for that needs unrestricted sudo + a real terminal + session restart, which an agent session cannot do; everything downstream of a fixed session is unblocked.
 
 ## Key Decisions
 

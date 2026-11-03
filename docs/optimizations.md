@@ -1,6 +1,6 @@
 # What this repo does that stock vLLM doesn't
 
-Nine things stock vLLM doesn't give you on this model — summarised, then explained — plus the two speculative-decoding modes. For what each one is worth in tokens per second, see [what each step buys](../README.md#what-each-step-buys).
+Nine things stock vLLM doesn't give you on this model — summarised, then explained — plus the two speculative-decoding modes. For what each one is worth in tokens per second, see [what each step buys](#what-each-step-buys).
 
 [← back to the main README](../README.md)
 
@@ -30,9 +30,10 @@ One line each; the rest of this page is the long version.
    block than the drafter can fill (`patches/dflash2-lookup-drafting.patch`):
    **381 tok/s** reproducing a 25k-token document verbatim, against 260 for the
    first version of this and 159 without it, still lossless.
-9. **Prefix caching for a hybrid model** — opt-in upstream; `PREFIX_CACHE=1`
-   makes a follow-up chat turn on a 24k document cost ~1 s instead of ~23 s, and
-   64 requests sharing a system prompt 17 s instead of 222 s.
+9. **Prefix caching for a hybrid model** — on by default since vLLM 0.28. Against
+   caching off on 0.27.1, `PREFIX_CACHE=1` made a follow-up chat turn on a 24k
+   document cost ~1 s instead of ~23 s, and 64 requests sharing a system prompt
+   17 s instead of 222 s.
 10. **int8 prefill for single-user mode** (`INT8_ACT=int8`) — prefill is
    compute-bound at every batch size, so the W4A8 tensor-core path is worth
    +27-30% prefill (+19% at 51k) on the dflash2 stack with decode unchanged;
@@ -112,10 +113,13 @@ One line each; the rest of this page is the long version.
    tokens cost the drafter nothing, the verify block is no longer capped at the drafter's
    own (7 tokens), and the long block is only scheduled while the lookup is firing:
    reproducing a document verbatim goes 7.83 → 15.0 tokens per step, 260 → 381 tok/s.
-9. **Prefix caching for a hybrid model, on purpose.** vLLM keeps it opt-in for
-   mamba/GDN hybrids; `PREFIX_CACHE=1` turns it on in both modes with the recurrent state
-   resumed from the last cached block boundary. Follow-up chat turns on a 24k document:
-   23 s → 1 s. 64 API requests sharing a 5.8k system prompt: 222 s → 17 s.
+9. **Prefix caching for a hybrid model, on purpose.** vLLM 0.27 kept it opt-in for
+   mamba/GDN hybrids, and `PREFIX_CACHE=1` turned it on in both modes with the recurrent
+   state resumed from the last cached block boundary. Since 0.28 vLLM turns it on by
+   default. The launcher passes the flag both ways, on for `PREFIX_CACHE=1` (the default)
+   and off for `PREFIX_CACHE=0`. Against caching off on 0.27.1, follow-up chat turns on a
+   24k document went 23 s → 1 s, and 64 API requests sharing a 5.8k system prompt
+   222 s → 17 s.
 
 ### int8 prefill for single-user mode (`INT8_ACT=int8`)
 
@@ -142,7 +146,7 @@ head_dim 256 has no faster sm86 alternative (FlashInfer measured within 1.5%,
 and it costs the split-KV verify path at decode).
 
 **int8-QK prefill attention** (`PREFILL_ATTN=int8`,
-`patches/triton-prefill-attn-int8.patch`) attacks what is left after the GEMMs: the
+`patches/prefill-attn-int8.patch`) attacks what is left after the GEMMs: the
 16 full-attention layers, whose head_dim of 256 pins FA2 at 54-57 TFLOPS on
 sm86 (85% of the card's practical fp16 mma rate — no fp16 rewrite can win).
 A Triton kernel runs QK^T on int8 tensor cores at 2x the fp16 rate,
@@ -159,7 +163,7 @@ two interleaved arms per condition, each reproducing to 0.1%): 1,167 / 1,126 /
 1,012 tok/s at 4k / 16k / 51k against 1,164 / 1,114 / 980 stock — +0.3%,
 +1.1%, +3.3%, the gain growing with context exactly as the attention share
 does. A WSL2 3090 measured the same standalone cell 1-6% negative
-([#62](https://github.com/syv-ai/qwen38-27b-rtx3090/issues/62)), so treat
+([#62](https://github.com/syv-ai/HyperQwen/issues/62)), so treat
 `PREFILL_ATTN` alone as noise-to-slightly-positive and pair it with
 `INT8_ACT`, where the same kernel is worth +1.8% at 16k and +4.5% at 51k on
 top (1,826 / 1,491 against 1,793 / 1,427).
@@ -180,10 +184,14 @@ Things this campaign measured that did NOT pay, so nobody re-walks them:
   drafter demotes the server from the V2 model runner to V1. The drafter's
   own prefill cost on the V2 runner is nil (6 kernel launches in a 4k
   profile); the "~15% TTFT" figure that used to circulate here predates the
-  fused context-KV precompute.
-- **`PREFIX_CACHE=0` prefills ~20% slower than `PREFIX_CACHE=1`** on this
-  stack, align mode ruled out as the cause (PC=0 + `--mamba-cache-mode align`
-  measures the same as plain PC=0). Do not turn the cache off "for speed".
+  fused context-KV precompute. (On 0.30, `SPEC=off` runs the V2 runner too, per its
+  boot log on 2026-09-25, so that cause no longer holds there, and 0.29's batch boots,
+  which have no drafter, run V2 as well; the ~20% gap itself has not been re-measured.)
+- **`PREFIX_CACHE=0` prefilled ~20% slower than `PREFIX_CACHE=1`** on vLLM 0.27.1, when
+  `PREFIX_CACHE=0` meant caching off. (The control that added `--mamba-cache-mode align` to
+  `PREFIX_CACHE=0` did not test align: with caching off, vLLM resets the mode to `none`.)
+  `PREFIX_CACHE=0` is caching off again, and the gap has not been re-measured since
+  0.27.1. Do not turn caching off "for speed".
 - **Bigger prefill chunks do not boot** under the pinned `KV_MEM`:
   `--max-num-batched-tokens` 4096 and 8192 both inflate the profiled
   activation peak past the transient floor (engine init fails). 2048 stays.
@@ -324,19 +332,19 @@ same server with `LOOKUP=0` (the two that differ are near-tie flips, gotcha 14).
 The mode also costs 4 request slots instead of 8 and 56k context instead of 64k, because
 `--mamba-cache-mode align` reserves recurrent-state pages per slot per speculative block.
 
-Pair it with `PREFIX_CACHE=1` (vLLM's hybrid prefix caching, opt-in upstream): a follow-up
-turn on a 24k-token document costs **~1 s instead of ~23 s** because the attention KV is
-reused and the recurrent state resumes from the last cached block boundary, for one extra
-state page per request (~16% of the KV pool). Prefill stops dominating a chat, and then
+Pair it with prefix caching (`PREFIX_CACHE=1`, the default). Against caching off on
+0.27.1, a follow-up turn on a 24k-token document cost **~1 s instead of ~23 s** because
+the attention KV is reused and the recurrent state resumes from the last cached block
+boundary, for one extra state page per request. Prefill stops dominating a chat, and then
 drafting from the context is what makes the decode fast.
 
-`PREFIX_CACHE=1` works in **batch mode** too, and matters just as much there: 64 requests
-sharing one 5,820-token system prompt take 222 s without it and **16.9 s** with it (median
-latency 94.9 s → 8.0 s), for ~14% of the KV pool and no change on workloads without a shared
-prefix. If your API backend sends the same instructions with every request, this is the
-single biggest thing in this repo for you. (The other three changes on this page —
-lookup drafting, the KV-group fix and the V2 graph accounting — only fire on the DFlash2
-path and are inert in batch mode.)
+`PREFIX_CACHE=1` works in **batch mode** too, and matters just as much there: on 0.27.1, 64
+requests sharing one 5,820-token system prompt took 222 s with caching off and **16.9 s**
+with it (median latency 94.9 s → 8.0 s), for ~14% of the KV pool and no change on
+workloads without a shared prefix. If your API backend sends the same instructions with
+every request, this is the single biggest thing in this repo for you. (The other three
+changes on this page — lookup drafting, the KV-group fix and the V2 graph accounting —
+only fire on the DFlash2 path and are inert in batch mode.)
 
 Its limits are memory- and window-shaped: each *resident* request holds 1+7
 recurrent-state slots — 0.88 GiB, 15.8% of the `CTX=fast` pool, before it stores any
@@ -357,3 +365,54 @@ DFlash2's own is running out of state pages at five residents where MTP holds ei
 and reaches 383 tok/s aggregate at C8. For **one person** with normal context — what single-user mode is
 for — it is the fastest config in this repo. Full table in
 [single-user/README.md](../single-user/README.md).
+
+## What each step buys
+
+Measured cumulatively on the 3090, 64 concurrent, 128 in / 512 out, `vllm bench
+serve` random dataset:
+
+| step | what it does | e2e output tok/s | steady-state decode |
+|---|---|---|---|
+| W4A16 AutoRound body (as published) + fp8 KV | int4 Marlin kernels, 66.7k-token pool | 370 (48 conc, 256/256) | — |
+| + lm_head / embed_tokens int8 | 2.6 GB of cache pages back | 516 | ~585 (37 requests resident) |
+| + fp16 recurrent state | 64 requests resident, half the state traffic | 707 | ~830 |
+| + int8 activations, MLP (default) | int8 tensor cores on 74% of the FLOPs | 942 | ~1,094 |
+| + int8 activations, everything (`INT8_LAYERS=.`, needs `GPU_UTIL` below 0.972; batch's default is enough) | | 1,042 | ~1,222 |
+
+And single-stream on realistic prompts (single-user mode, T = model default /
+greedy):
+
+| step | tok/s | tokens per step | draft acceptance, position 0 |
+|---|---|---|---|
+| no speculation | 46 / 46 | 1.0 | — |
+| MTP-2 as shipped (bf16 drafter, full head, fp32 state) | 66 / 79 | 2.1 / 2.4 | 65% / 80% |
+| MTP-4, int8 drafter, 40k draft head, fp16 state | 78 / 99 | 2.2 / 2.7 | 58% / 70% |
+| + probabilistic draft sampling (`CTX=fast`, k=4) | 90 / 98 | 2.6 / 2.7 | 69% / 70% |
+| same with 3 drafts on FlashInfer/fp8 KV (`CTX=long`, 150k) | 84 / 89 | 2.5 / 2.4 | 69% / 71% |
+| + sampler patch, split-KV verify attention | 93 / 99 | 2.6 / 2.6 | 69% / 70% |
+| + draft vocab counted over the model's own outputs | 107 / 109 | 2.9 / 2.9 | 74% / 74% |
+| + GPTQ-int4 lm_head (calibrated) | 109 / 112 | 2.8 / 2.8 | 73% / 73% |
+| + GPTQ-int4 MTP module (**fast variant, shipped**) | **~114 / 118-124** | 2.8 / 2.9-3.0 | 74% / 77% |
+| DFlash2 block drafter instead of MTP (`SPEC=dflash2`, int4-requantized) | **118 / 126** | 3.14 / 3.34 | ~75% / ~78% |
+| + drafting from the context (`LOOKUP=1`, on by default) | **130** at C1, up to **259** where the model reproduces its context | 3.3-7.8 | |
+| + a 16-token verify block the context fills (`DFLASH_TOKENS=15`) | **133** at C1, up to **381** reproducing context | 3.4-15.0 | |
+
+(Steps 4-6 are the same 8-prompt protocol; greedy is deterministic for a
+given server and request order but differs between configs and even with
+prefix-cache hits, so single runs carry ±3-5% on tokens/step —
+`bench/run_benchmarks.sh single` reproduces 111.1 / 120.0 tok/s decode at C1,
+the best repeats read 119 / 124.)
+Going deeper (k=5) loses again: 106 / 105. k=4 is the knee, but on vLLM
+0.28.0's FlashInfer backend (needed for fp8 KV, i.e. for 150k context) four
+drafts crash the engine with an illegal memory access as soon as one request
+finishes while another is mid-generation — club-3090 reports the same "n=4
+eventually dies, n=3 stable" pattern — so `CTX=long` drafts 3 and gives up
+~7%; `CTX=fast` (FlashAttention, bf16 KV, ~64k context, the default) keeps k=4
+and is also the only backend the split-KV attention patch applies to.
+
+Two things that did *not* help, measured rather than assumed: fine-tuning the
+MTP head on the model's own outputs (KL halves, greedy top-1 on response
+tokens unchanged; `drafter/README.md`), and retuning Marlin's tile
+configuration for M ≤ 16 on sm86 (3-7% per GEMM in isolation,
+nothing measurable end to end — the remaining gap to peak bandwidth is the
+memory system's ramp on 16-92 MB reads, not the kernel).

@@ -63,6 +63,18 @@ int4_per_token_head.py are untouched. Pool logic: bench/mq3d_scratch_pool_test.p
 (CPU tensors, runs inside the image). Measurements and the reading:
 docs/spec-decode-scratch-token-units.md, "Follow-up".
 
+Kind: own
+What: mq3d scratch allocated inside the memory budget (fork #57)
+Upstream: none
+Cut-against: 0.32.0: the pool owns the scratch at 16 segments, so #58482's SM120 64-segment mode is off in
+  TRITON_ATTN (max_seqs_64_segments = 0): RTX 50 cards keep 0.31's 16 segments and lose #58482's occupancy
+  gain; correctness unchanged
+Retires-when: rides with mq3d
+
+--- exported from 8cccc4888 (spec-decode-scratch-within-budget); regenerate with scripts/export-patch.sh, do not edit ---
+
+diff --git a/v1/attention/backends/triton_attn.py b/v1/attention/backends/triton_attn.py
+index 7b7a46c0a..3cff0d6a7 100644
 --- a/v1/attention/backends/triton_attn.py
 +++ b/v1/attention/backends/triton_attn.py
 @@ -9,7 +9,7 @@
@@ -74,7 +86,16 @@ docs/spec-decode-scratch-token-units.md, "Follow-up".
  from vllm.config.cache import CacheDType
  from vllm.logger import init_logger
  from vllm.model_executor.layers.quantization.utils.quant_utils import (
-@@ -65,6 +65,175 @@
+@@ -18,7 +18,7 @@
+ )
+ from vllm.platforms import current_platform
+ from vllm.platforms.interface import DeviceCapability
+-from vllm.utils.math_utils import cdiv, next_power_of_2
++from vllm.utils.math_utils import next_power_of_2
+ from vllm.utils.torch_utils import get_dtype_size, is_quantized_kv_cache
+ from vllm.v1.attention.backend import (
+     AttentionBackend,
+@@ -63,6 +63,175 @@
  MAX_QUERY_LEN_3D = 16
  
  
@@ -250,7 +271,7 @@ docs/spec-decode-scratch-token-units.md, "Follow-up".
  @dataclass
  class TritonAttentionMetadata:
      # NOTE(sang): Definition of context_len, query_len, and seq_len.
-@@ -141,30 +310,7 @@
+@@ -133,40 +302,11 @@
              )
          )
  
@@ -276,12 +297,25 @@ docs/spec-decode-scratch-token-units.md, "Follow-up".
 -            )
 -
          self.num_par_softmax_segments = NUM_PAR_SOFTMAX_SEGMENTS
+-        # On SM120, batches whose 16-segment grid under-fills the SMs use 64.
++        # (syv) upstream's SM120 64-segment mode (#58482) stays off while the 3D scratch
++        # comes from the budgeted pool (mq3d_scratch_plan), which is sized for 16 segments,
++        # the layout every card ran before #58482. build()'s 16-segment fallback never fires.
+         self.max_seqs_64_segments = 0
+-        if current_platform.is_cuda() and current_platform.is_device_capability(
+-            (12, 0)
+-        ):
+-            self.max_seqs_64_segments = (current_platform.num_compute_units() - 1) // (
+-                NUM_PAR_SOFTMAX_SEGMENTS * self.num_heads_kv
+-            )
+-        if self.max_seqs_64_segments > 0:
+-            self.num_par_softmax_segments = 64
 -        headdim_padded = next_power_of_2(self.headdim)
 -
          # ---- UNIT SPLIT ------------------------------------------------------------
          # These three quantities were one variable, in three different units. The
          # scratch buffers are indexed by QUERY TOKEN, but were sized by
-@@ -185,57 +331,29 @@
+@@ -187,70 +327,29 @@
          # requires num_seqs <= seq_threshold_3D, and no batch can carry more query
          # tokens than the scheduler will place in one, so this is the smallest
          # capacity that can hold every policy-eligible batch.
@@ -290,9 +324,27 @@ docs/spec-decode-scratch-token-units.md, "Follow-up".
 -        self.scratch_token_capacity_3d = min(
 -            _sched.max_num_batched_tokens,
 -            min(_sched.max_num_seqs, self.seq_threshold_3D) * self.max_query_len_3d,
--        )
++        plan = mq3d_scratch_plan(self.vllm_config, self.num_heads_q)
++        assert (plan.num_heads_kv, plan.headdim_padded) == (
++            self.num_heads_kv, next_power_of_2(self.headdim)
++        ), "int4 3D scratch plan geometry disagrees with the builder's"
++        self.seq_threshold_3D = plan.seq_threshold_3D
++        self.max_query_len_3d = plan.max_query_len_3d
++        scratch = mq3d_scratch_acquire(
++            plan, device, "metadata builder",
++            exclusive=bool(getattr(self.vllm_config.parallel_config, "use_ubatching", False)),
+         )
 -
 -        _rows = self.scratch_token_capacity_3d
+-        _segment_ratio = self.num_par_softmax_segments // NUM_PAR_SOFTMAX_SEGMENTS
+-        if _segment_ratio > 1:
+-            # (syv) upstream's SM120 sizing (#58482) in token units: rows at 64 segments,
+-            # which build() reuses at 16 segments with _segment_ratio times the rows, so
+-            # that layout must still hold the whole token capacity.
+-            _rows = max(
+-                min(self.max_seqs_64_segments, _rows),
+-                cdiv(_rows, _segment_ratio),
+-            )
 -        _row_bytes = 4 * (
 -            self.num_heads_q * self.num_par_softmax_segments * headdim_padded
 -            + 2 * self.num_heads_q * self.num_par_softmax_segments
@@ -303,7 +355,7 @@ docs/spec-decode-scratch-token-units.md, "Follow-up".
 -            "int4 3D scratch: capacity=%d query tokens (min of max_num_batched_tokens=%d, "
 -            "min(max_num_seqs=%d, seq_threshold_3D=%d) * max_query_len_3d=%d); "
 -            "%d B/row, %.2f MiB for this instance",
--            _rows, _sched.max_num_batched_tokens, _sched.max_num_seqs,
+-            self.scratch_token_capacity_3d, _sched.max_num_batched_tokens, _sched.max_num_seqs,
 -            self.seq_threshold_3D, self.max_query_len_3d,
 -            _row_bytes, _row_bytes * _rows / 2**20,
 -        )
@@ -331,16 +383,6 @@ docs/spec-decode-scratch-token-units.md, "Follow-up".
 -        # All three buffers must agree with the DECLARED capacity. One oversized
 -        # buffer can otherwise mask another undersized one until a different reducer
 -        # path is taken.
-+        plan = mq3d_scratch_plan(self.vllm_config, self.num_heads_q)
-+        assert (plan.num_heads_kv, plan.headdim_padded) == (
-+            self.num_heads_kv, next_power_of_2(self.headdim)
-+        ), "int4 3D scratch plan geometry disagrees with the builder's"
-+        self.seq_threshold_3D = plan.seq_threshold_3D
-+        self.max_query_len_3d = plan.max_query_len_3d
-+        scratch = mq3d_scratch_acquire(
-+            plan, device, "metadata builder",
-+            exclusive=bool(getattr(self.vllm_config.parallel_config, "use_ubatching", False)),
-+        )
 +        self.softmax_segm_output = scratch.output
 +        self.softmax_segm_max = scratch.max
 +        self.softmax_segm_expsum = scratch.expsum
@@ -352,12 +394,17 @@ docs/spec-decode-scratch-token-units.md, "Follow-up".
              self.softmax_segm_output.shape[0]
              == self.softmax_segm_max.shape[0]
              == self.softmax_segm_expsum.shape[0]
-             == self.scratch_token_capacity_3d
+-        ) and (
+-            self.softmax_segm_max.shape[0] == self.scratch_token_capacity_3d
+-            if _segment_ratio == 1
+-            else self.softmax_segm_max.shape[0] * _segment_ratio
+-            >= self.scratch_token_capacity_3d
++            == self.scratch_token_capacity_3d
 +            >= plan.capacity
          ), "int4 3D scratch buffers disagree with the declared token capacity"
          self.rswa_window = model_config.rswa_window
-         self.persistent_rswa_prefix_lens: torch.Tensor | None = None
-@@ -643,6 +761,20 @@
+         # R-SWA restages prefix lengths in build(), which the no-op
+@@ -616,6 +715,20 @@
          else:
              self.use_td = td_override
  
