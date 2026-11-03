@@ -28,7 +28,7 @@ configured as a runtime. The 250 W power limit is a host setting
 git clone https://github.com/syv-ai/HyperQwen && cd HyperQwen
 cp .env.example .env                              # all knobs live in .env (gitignored)
 # PowerShell: Copy-Item .env.example .env
-echo "VLLM_API_KEY=$(openssl rand -hex 24)" >> .env   # skip only if the port stays on this machine (compose publishes on 127.0.0.1; add BIND=0.0.0.0 to serve other machines)
+echo "VLLM_API_KEY=$(openssl rand -hex 24)" >> .env   # required before exposing: compose publishes on 0.0.0.0 by default (set BIND=127.0.0.1 to keep it local-only)
 docker compose --profile single up -d               # or --profile batch
 docker compose logs -f single
 ```

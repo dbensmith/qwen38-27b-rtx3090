@@ -2,17 +2,21 @@
 # checked-in script — no hidden flags. `make help` lists them.
 # Native (venv) launchers remain: bash single-user/start_qwen.sh etc.
 
-.PHONY: help up-single up-batch down logs ps verify verify-install shell keygen doctor
+.PHONY: help up-single up-batch down logs ps verify verify-install warmup shell keygen doctor
 
 help: ## show this list
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-14s %s\n", $$1, $$2}'
 
-up-single: ## serve one/few users (SPEC=dflash2 profile from .env)
+up-single: ## serve one/few users (stops batch, persists choice)
+	@docker compose --profile batch stop >/dev/null 2>&1 || true
 	docker compose --profile single up -d
+	@printf 'single\n' > .current-profile
 	@echo "first boot compiles (~2-15 min); follow with: make logs"
 
-up-batch: ## serve API backend / many concurrent
+up-batch: ## serve API backend / many concurrent (stops single, persists choice)
+	@docker compose --profile single stop >/dev/null 2>&1 || true
 	docker compose --profile batch up -d
+	@printf 'batch\n' > .current-profile
 	@echo "first boot compiles (~2-15 min); follow with: make logs"
 
 down: ## stop server
@@ -32,6 +36,11 @@ verify: ## verify.sh inside the running single/batch container (live checks incl
 
 verify-install: ## install-only checks (venv, vLLM, patches, KVarN): no GPU/model/server
 	bash verify.sh --install
+
+warmup: ## run the post-health serving warmup inside the running single/batch
+	@svc=$$(docker compose ps --status running --services 2>/dev/null | grep -xE 'single|batch' | head -n1); \
+	if [ -z "$$svc" ]; then echo "warmup: no running single/batch service"; exit 1; fi; \
+	docker compose exec "$$svc" bash bench/warmup.sh
 
 shell: ## throwaway shell in the server image (patches + venv, no GPU boot)
 	docker compose run --rm single bash

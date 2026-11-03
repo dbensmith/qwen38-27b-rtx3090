@@ -60,9 +60,9 @@ until a mode is explicitly chosen.
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Deploy via Docker Compose profiles, not bare-metal venv + systemd units | This WSL distro has no systemd; Compose + `restart: unless-stopped` + Docker's existing boot-start already covers most of the auto-restart behavior | ✓ Good |
-| Explicit `switch.sh single\|batch` script, not "whatever was running wins" | User wants deliberate mode selection with a persisted choice, not implicit state inferred from container status | — Pending |
-| Default profile is `batch` on first run | Quick task 260917-2fz (2026-09-17) made batch the current default; boot follows the same fallback (switch.sh:109) | ✓ Good |
-| Boot autostart follows the existing chezmoi `/etc/wsl.conf [boot]` wrapper pattern | Consistency with the Paseo daemon boot hook already on this machine; avoids introducing systemd as a second, unsupported autostart mechanism | — Pending |
+| Explicit `make up-single\|batch` profile targets (`Makefile`), not "whatever was running wins" | User wants deliberate mode selection with a persisted choice, not implicit state inferred from container status. After the HyperQwen vLLM 0.32.0 merge, the old `switch.sh` and a temporary wrapper were removed: the upstream Makefile targets stop the other profile and persist `.current-profile`, and the stale 0.28-era `KV_MEM` pin is gone. | — Pending |
+| Default profile is `batch` on first run | Quick task 260917-2fz (2026-09-17) made batch the current default; boot follows the same fallback (`make up-batch`) | ✓ Good |
+| Boot autostart follows the existing chezmoi `/etc/wsl.conf [boot]` wrapper pattern | Consistency with the Paseo daemon boot hook already on this machine; avoids introducing systemd as a second, unsupported autostart mechanism. The wrapper now calls `make up-<profile>` so the Makefile is the single switch/start path. | — Pending |
 | Qwen3.8-Flash-Next, if adopted, runs natively on Windows (Unsloth Desktop), not WSL | 64 GB host RAM and direct NVMe access avoid WSL's 56 GB cap and the VHDX/9p storage path for a 75+ GB disk-streamed MoE; Unsloth Desktop also enables MTP automatically. WSL remains the automation path for the 27B Docker stack. | ✓ Decided 2026-11-03 — not executed |
 
 ## Evolution

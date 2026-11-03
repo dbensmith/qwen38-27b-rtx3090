@@ -473,6 +473,10 @@ systemctl --user daemon-reload
 systemctl --user start qwen-serving
 ```
 
+On the Docker/WSL path (no systemd), `make up-single` and `make up-batch`
+stop the other profile first and persist the choice to `.current-profile` for
+the WSL boot hook.
+
 ## If you are the only user, do this
 
 The command above starts the conservative default — MTP speculation, 8 request
